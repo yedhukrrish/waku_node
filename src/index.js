@@ -3,6 +3,10 @@ import express from 'express';
 import pkg from 'protobufjs';
 import socket from 'socket.io';
 import http from "http";
+import cors from "cors";
+import Server from "socket.io";
+import dotenv from 'dotenv';
+dotenv.config()
 
 
 const { Type, Field } = pkg;
@@ -10,6 +14,8 @@ const app = express();
 const port = 3005;
 const server = http.createServer(app);
 const contentTopic="/toy-chat/2/huilong/proto";
+app.use(cors());
+
 
 const io = socket(server, {
   cors: {
@@ -17,6 +23,10 @@ const io = socket(server, {
     credentials:true,
   },
 });
+io.on("connection", (socket) => {
+  global.chatSocket = socket;
+ console.log("Connection established")
+})
 const Encoder = createEncoder({ contentTopic });
 const Decoder = createDecoder( contentTopic );
 
@@ -42,7 +52,7 @@ const callback = (wakuMessage) => {
   console.log(bytesToUtf8(messageObj.message));
   io.on("connection", (socket) => {
     global.chatSocket = socket;
-    io.emit('receive', messageObj);
+    io.emit('recieve', messageObj);
   
   })
 };
@@ -84,10 +94,23 @@ await node.lightPush.send(Encoder, {
   }
 
 // Define routes
-app.use(express.json());
-
+app.use(cors());
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  next();
+});
+app.use(express.json({
+  limit: "100mb",
+  extended: true
+}));
+app.use(express.urlencoded({
+  limit: "100mb",
+  extended: true,
+  parameterLimit: 50000
+}));
 // Home route
-app.post('/', async (req, res) => {
+app.post('/publish', async (req, res) => {
 
   res.send(await initWakuContext({ name : req?.body?.name,text : req?.body?.text}));
 });
@@ -98,6 +121,6 @@ app.use((req, res) => {
 });
 
 // Start the server
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
