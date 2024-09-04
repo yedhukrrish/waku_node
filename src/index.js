@@ -68,6 +68,7 @@ await subscription.subscribe([Decoder], callback);
 //commit5
 //commit6
 //commit7
+//commit8
 
 async function initWakuContext({ name,text }) {
    
