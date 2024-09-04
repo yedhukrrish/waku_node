@@ -63,7 +63,8 @@ const subscription = await node.filter.createSubscription();
 // Subscribe to content topics and process new messages
 await subscription.subscribe([Decoder], callback);
 
-//commit
+//commit3
+//commit4
 
 async function initWakuContext({ name,text }) {
    
